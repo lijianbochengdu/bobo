@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context.xsd
+           http://www.springframework.org/schema/tx
+           http://www.springframework.org/schema/tx/spring-tx.xsd
+           http://www.springframework.org/schema/aop
+           http://www.springframework.org/schema/aop/spring-aop.xsd
+           http://www.springframework.org/schema/mvc
+           http://www.springframework.org/schema/mvc/spring-mvc.xsd
+           ">
+	<!--jdbc.properties.. datasource(名字) .. sqlsessionFactory(外部mapper,别名，dataSource) .. 事务管理(事务管理，aop,事务增强) -..service . 
+	Mapper代理，一劳永逸...组件扫描...引入SpringMVC 
+	-->
+
+	<!-- 引用数据库 的连接信息 -->
+	<context:property-placeholder location="classpath:jdbc.properties" />
+
+	<!-- 连接信息 这里是Spring连接数据库，所以要用这个名字driverClassName -->
+	<!-- 如果是MyBtis连接数据库，那么要用driver作为名字 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${db.driver}" />
+		<property name="url" value="${db.url}" />
+		<property name="username" value="${db.username}" />
+		<property name="password" value="${db.password}" />
+	</bean>
+
+	<bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<!-- 引入外部的mapper.xml --><!-- 引入mybits 的映射文件 -->
+		<property name="mapperLocations"
+			value="classpath*:com/lijianbo/ssm/mapper/*Mapper.xml" />
+		<!-- 原来别名放到这里啊,多个包 -->
+		<property name="typeAliasesPackage" value="com.lijianbo.ssm.domain,com.lijianbo.ssm.query" />
+		<!-- 配置在mybatis-config.xml里面配置的setting属性 -->
+	</bean>
+
+	<!-- 一劳永逸:配置，获取Mapper接口的实例,采用动态代理机制 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<!-- Mapper接口的包路径 -->
+		<!-- spring在这里会使用jdk的动态代理来生成cn.itsource.ssm.mapper包下面的Mapper接口的实现:$Proxy5 -->
+		<property name="basePackage" value="com.lijianbo.ssm.mapper" />
+	</bean>
+
+	<!-- 声明式的事务管理transactionManager -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<!-- aop 注意这个的格式execution 指定在哪里添加事务。 -->
+	<aop:config>
+		<aop:pointcut id="fooServiceOperation"
+			expression="execution(* com.lijianbo.ssm.service.I*Service.*(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="fooServiceOperation" />
+	</aop:config>
+	<!-- 事务增强 事务怎么配置 -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+	<!-- 事务传播特性===	propagation  传播，SUPPORTS  如果有事务，则支持事务，如果没有，则不支持事务。查询不需要事务，所有就不会有事务。其他则有事务 -->
+			<tx:method name="get*" read-only="true" propagation="SUPPORTS" />
+			<tx:method name="find*" read-only="true" propagation="SUPPORTS" />
+			<!-- 必须配置到最后 -->
+			<tx:method name="*" />
+		</tx:attributes>
+	</tx:advice>
+
+	<!-- 组件扫描，注解 -->
+	<context:component-scan base-package="com.lijianbo.ssm" />
+	<!-- 引入SpringMVC -->
+	<import resource="classpath:applicationContext-mvc.xml" />
+
+</beans>

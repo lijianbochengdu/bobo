@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?><!-- Use this file to deploy some handlers/chains and services      --><!-- Two ways to do this:                                           --><!--   java org.apache.axis.client.AdminClient deploy.wsdd          --><!--      after the axis server is running                          --><!-- or                                                             --><!--   java org.apache.axis.utils.Admin client|server deploy.wsdd   --><!--      from the same directory that the Axis engine runs         --><deployment xmlns="http://xml.apache.org/axis/wsdd/" xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+
+  <!-- Services from HelloServiceService WSDL service -->
+
+  <service name="HelloService" provider="java:RPC" style="wrapped" use="literal">
+      <parameter name="wsdlTargetNamespace" value="http://service.lijianbo.com"/>
+      <parameter name="wsdlServiceElement" value="HelloServiceService"/>
+      <parameter name="schemaQualified" value="http://service.lijianbo.com"/>
+      <parameter name="wsdlServicePort" value="HelloService"/>
+      <parameter name="className" value="com.lijianbo.service.HelloService"/>
+      <parameter name="wsdlPortType" value="HelloService"/>
+      <parameter name="typeMappingVersion" value="1.2"/>
+      <operation xmlns:operNS="http://service.lijianbo.com" xmlns:retNS="http://service.lijianbo.com" xmlns:rtns="http://www.w3.org/2001/XMLSchema" name="sayHello" qname="operNS:sayHello" returnQName="retNS:sayHelloReturn" returnType="rtns:string" soapAction="">
+        <parameter xmlns:pns="http://service.lijianbo.com" xmlns:tns="http://www.w3.org/2001/XMLSchema" qname="pns:name" type="tns:string"/>
+      </operation>
+      <operation xmlns:operNS="http://service.lijianbo.com" xmlns:retNS="http://service.lijianbo.com" xmlns:rtns="http://www.w3.org/2001/XMLSchema" name="sayGoodbye" qname="operNS:sayGoodbye" returnQName="retNS:sayGoodbyeReturn" returnType="rtns:string" soapAction="">
+        <parameter xmlns:pns="http://service.lijianbo.com" xmlns:tns="http://www.w3.org/2001/XMLSchema" qname="pns:name" type="tns:string"/>
+      </operation>
+      <parameter name="allowedMethods" value="sayHello sayGoodbye"/>
+
+  </service>
+</deployment>

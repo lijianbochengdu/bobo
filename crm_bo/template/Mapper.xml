@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lijianbo.ssm.mapper.${domain}Mapper">
+	<!-- ***高级查询 -->
+	<sql id="whereSql">
+		<where>
+			<if test="keyword != null and keyword != ''">
+				and (name like concat("%",#{keyword},"%") or
+				sn like concat("%",#{keyword},"%"))
+			</if>
+		</where>
+	</sql>
+	<!--***查询部门表最基本的sql，这里要查询关联对象 -->
+	<sql id="commonSql">
+		select d.id,d.sn,d.name,d.dirPath,d.state,e.id
+		eid,e.realName ename,p.id pid,p.name pname
+		from t_${lowerDomain} d
+		left join t_employee e on d.manager_id=e.id
+		left join t_${lowerDomain} p on d.parent_id=p.id
+	</sql>
+<!--***返回map集合 -->
+	<resultMap type="${domain}" id="${lowerDomain}ResultMap">
+		<id property="id" column="id" />
+		<result property="sn" column="sn" />
+		<result property="name" column="name" />
+		<result property="dirPath" column="dirPath" />
+		<result property="state" column="state" />
+		<association property="manager" javaType="Employee">
+			<id property="id" column="eid" />
+			<result property="realName" column="ename" />
+		</association>
+		<association property="parent" javaType="${domain}">
+			<id property="id" column="pid" />
+			<result property="name" column="pname" />
+		</association>
+	</resultMap>
+	<!--新增   useGeneratedKeys="true" keyProperty="id" 保存的时候设置id  manager_id=#{manager.id}-->
+	<insert id="save" parameterType="${domain}"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into t_${lowerDomain}
+		(sn,name)
+		values(#{sn},#{name})
+	</insert>
+
+	<delete id="delete" parameterType="long">
+		delete from t_${lowerDomain} where
+		id=#{id}
+	</delete>
+
+	<update id="update" parameterType="${domain}">
+		update t_${lowerDomain} set
+		sn=#{sn},name=#{name}
+		where id=#{id}
+	</update>
+
+	<select id="get" parameterType="long" resultMap="${lowerDomain}ResultMap">
+		<!-- 注意以前sql中的?,这里要将关联对象查询出来 -->
+		<include refid="commonSql" />
+		where X.id = #{id}
+	</select>
+
+	<select id="getAll" resultMap="${lowerDomain}ResultMap">
+		<include refid="commonSql" />
+	</select>
+
+	<!-- 分页，得到count -->
+	<select id="getTotal" resultType="int" parameterType="${domain}Query">
+		select count(*) from t_${lowerDomain}
+		<include refid="whereSql" />
+	</select>
+
+	<!-- 分页，limit -->
+	
+<select id="findByQuery" parameterType="${domain}Query"
+		resultMap="${lowerDomain}ResultMap">
+		<include refid="commonSql" />
+		<include refid="whereSql" />
+		limit 
+	</select> 
+	
+	
+</mapper> 
